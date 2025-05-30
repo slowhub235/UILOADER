@@ -1,0 +1,147 @@
+local TweenService = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
+
+-- Create UI
+local gui = Instance.new("ScreenGui", game.CoreGui)
+gui.Name = "UniqueExploitUI"
+gui.ResetOnSpawn = false
+
+local function MakeDraggable(frame)
+	local dragging, dragInput, dragStart, startPos
+
+	frame.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			dragStart = input.Position
+			startPos = frame.Position
+
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+
+	UIS.InputChanged:Connect(function(input)
+		if dragging and input == dragInput then
+			local delta = input.Position - dragStart
+			frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+				startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		end
+	end)
+
+	frame.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement then
+			dragInput = input
+		end
+	end)
+end
+
+-- Create Main Window
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0, 550, 0, 350)
+main.Position = UDim2.new(0.5, -275, 0.5, -175)
+main.BackgroundColor3 = Color3.fromRGB(22, 22, 30)
+main.BorderSizePixel = 0
+main.Name = "MainWindow"
+main.ZIndex = 10
+MakeDraggable(main)
+
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 12)
+
+local topBar = Instance.new("TextLabel", main)
+topBar.Size = UDim2.new(1, 0, 0, 45)
+topBar.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+topBar.Text = "💫 Unique Hub"
+topBar.TextSize = 22
+topBar.Font = Enum.Font.FredokaOne
+topBar.TextColor3 = Color3.fromRGB(200, 200, 255)
+Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 12)
+
+local tabsFrame = Instance.new("Frame", main)
+tabsFrame.Size = UDim2.new(0, 150, 1, -50)
+tabsFrame.Position = UDim2.new(0, 0, 0, 50)
+tabsFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 40)
+Instance.new("UICorner", tabsFrame).CornerRadius = UDim.new(0, 10)
+
+local contentFrame = Instance.new("Frame", main)
+contentFrame.Size = UDim2.new(1, -160, 1, -60)
+contentFrame.Position = UDim2.new(0, 160, 0, 60)
+contentFrame.BackgroundTransparency = 1
+
+-- Tabs & Buttons
+local activeTab = nil
+local function createTab(tabName)
+	local tabBtn = Instance.new("TextButton", tabsFrame)
+	tabBtn.Size = UDim2.new(1, -10, 0, 32)
+	tabBtn.Position = UDim2.new(0, 5, 0, #tabsFrame:GetChildren() * 36)
+	tabBtn.Text = "⟡ " .. tabName
+	tabBtn.Font = Enum.Font.GothamMedium
+	tabBtn.TextSize = 14
+	tabBtn.TextColor3 = Color3.new(1, 1, 1)
+	tabBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+	Instance.new("UICorner", tabBtn).CornerRadius = UDim.new(0, 6)
+
+	local tabContent = Instance.new("Frame", contentFrame)
+	tabContent.Size = UDim2.new(1, 0, 1, 0)
+	tabContent.BackgroundTransparency = 1
+	tabContent.Visible = false
+	tabContent.Name = tabName
+
+	local layout = Instance.new("UIListLayout", tabContent)
+	layout.Padding = UDim.new(0, 6)
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+
+	tabBtn.MouseButton1Click:Connect(function()
+		if activeTab then activeTab.Visible = false end
+		tabContent.Visible = true
+		activeTab = tabContent
+	end)
+
+	if not activeTab then
+		tabContent.Visible = true
+		activeTab = tabContent
+	end
+
+	return tabContent
+end
+
+local function addButton(tab, text, callback)
+	local btn = Instance.new("TextButton", tab)
+	btn.Size = UDim2.new(0, 330, 0, 32)
+	btn.Text = "→ " .. text
+	btn.Font = Enum.Font.Gotham
+	btn.TextSize = 14
+	btn.TextColor3 = Color3.new(1, 1, 1)
+	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+
+	btn.MouseEnter:Connect(function()
+		TweenService:Create(btn, TweenInfo.new(0.2), {
+			BackgroundColor3 = Color3.fromRGB(70, 70, 120)
+		}):Play()
+	end)
+
+	btn.MouseLeave:Connect(function()
+		TweenService:Create(btn, TweenInfo.new(0.2), {
+			BackgroundColor3 = Color3.fromRGB(50, 50, 80)
+		}):Play()
+	end)
+
+	btn.MouseButton1Click:Connect(function()
+		pcall(callback)
+	end)
+end
+
+-- Create Tabs & Buttons
+local mainTab = createTab("Main")
+addButton(mainTab, "God Mode", function() print("God Mode Enabled") end)
+addButton(mainTab, "Kill All", function() print("Killed everyone") end)
+
+local trollTab = createTab("Troll")
+addButton(trollTab, "Fling", function() print("Fling activated") end)
+addButton(trollTab, "Crash Server", function() print("Server crash attempted") end)
+
+-- Parent content frame
+contentFrame.Parent = main
